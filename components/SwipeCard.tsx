@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '../types';
-import { MapPin, Info, Zap, Activity, Star, Check } from 'lucide-react';
+import { MapPin, Info, Star, Check, Activity } from 'lucide-react';
 
 interface SwipeCardProps {
   profile: UserProfile;
@@ -30,7 +30,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
   ]);
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 120;
+    const threshold = 100;
     if (info.offset.x > threshold) {
       setExitX(500);
       onSwipe('right');
@@ -40,24 +40,21 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
     }
   };
 
-  if (!active) return null;
-
   // Identify matching vibes
   const matchingVibes = profile.vibes ? profile.vibes.filter(v => userVibes.includes(v)) : [];
   const hasMatch = matchingVibes.length > 0;
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center z-10"
-      style={{ x, rotate, scale, opacity }}
-      drag="x"
+      className="absolute inset-0 w-full h-full rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing bg-black shadow-2xl border border-white/10"
+      style={active ? { x, rotate, scale, opacity } : { scale: 1 }} // Only apply motion transforms if active
+      drag={active ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.7}
       onDragEnd={handleDragEnd}
       animate={exitX !== null ? { x: exitX, opacity: 0 } : { x: 0, opacity: 1, scale: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="relative w-full h-full bg-black overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing border-x border-white/5">
         
         {/* Main Image */}
         <div 
@@ -77,11 +74,11 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
 
         {/* Action Stamps */}
         <motion.div style={{ opacity: likeOpacity }} className="absolute top-12 left-8 z-30">
-             <span className="text-cyan-400 font-black text-5xl tracking-tighter drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] transform -rotate-12 block">VIBE</span>
+             <span className="text-cyan-400 font-black text-5xl tracking-tighter drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] transform -rotate-12 block border-4 border-cyan-400 px-4 rounded-xl">LIKE</span>
         </motion.div>
 
         <motion.div style={{ opacity: nopeOpacity }} className="absolute top-12 right-8 z-30">
-            <span className="text-gray-400 font-black text-5xl tracking-tighter drop-shadow-[0_0_15px_rgba(0,0,0,0.8)] transform rotate-12 block">PASS</span>
+            <span className="text-red-500 font-black text-5xl tracking-tighter drop-shadow-[0_0_15px_rgba(239,68,68,0.8)] transform rotate-12 block border-4 border-red-500 px-4 rounded-xl">NOPE</span>
         </motion.div>
         
         {/* Rating Badge - Top Right */}
@@ -93,7 +90,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
         </div>
 
         {/* Info Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 pb-28 text-white z-20 pointer-events-auto">
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-20 pointer-events-auto">
           
           <div className="flex gap-2 mb-3">
              {/* Mood Badge */}
@@ -124,10 +121,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
 
             {/* Vibe Tags (Buddy Types) */}
             <div className="flex flex-wrap gap-2 mb-2">
-                {profile.vibes && profile.vibes.map((vibe, i) => {
+                {profile.vibes && profile.vibes.slice(0, 3).map((vibe, i) => {
                     const isMatch = userVibes.includes(vibe);
                     return (
-                        <span key={`vibe-${i}`} className={`px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wide ${
+                        <span key={`vibe-${i}`} className={`px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wide ${
                             isMatch 
                             ? 'bg-cyan-500 text-black border-cyan-400' 
                             : 'bg-white/10 text-white border-white/20'
@@ -136,15 +133,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
                         </span>
                     );
                 })}
-            </div>
-
-            {/* General Interest Tags */}
-            <div className="flex flex-wrap gap-2 mb-4 opacity-80">
-               {profile.interests.slice(0, 3).map((tag, i) => (
-                   <span key={i} className="px-2 py-1 rounded bg-black/40 border border-white/5 text-[10px] font-semibold text-gray-400">
-                       #{tag.toLowerCase().replace(/\s/g, '')}
-                   </span>
-               ))}
             </div>
 
             {/* Expanded Bio / Details */}
@@ -156,7 +144,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                      >
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/5 backdrop-blur-sm mb-2">
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/5 backdrop-blur-sm mb-2 mt-2">
                              <p className="text-xs text-blue-400 uppercase tracking-widest font-bold mb-1">Looking For</p>
                              <p className="text-white font-medium mb-3">{profile.lookingFor || "Casual fun"}</p>
                              
@@ -173,7 +161,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex items-center gap-2 text-gray-400 text-sm cursor-pointer hover:text-cyan-400 transition-colors"
+                        className="flex items-center gap-2 text-gray-400 text-sm cursor-pointer hover:text-cyan-400 transition-colors mt-1"
                         onClick={() => setShowDetails(true)}
                     >
                         <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
@@ -184,13 +172,12 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, active, 
 
             <button 
                 onClick={(e) => { e.stopPropagation(); setShowDetails(!showDetails); }}
-                className="absolute right-6 bottom-28 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center backdrop-blur border border-white/10 text-white hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                className="absolute right-0 bottom-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur border border-white/10 text-white hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors z-30"
             >
                 <Info size={20} />
             </button>
           </div>
         </div>
-      </div>
     </motion.div>
   );
 };

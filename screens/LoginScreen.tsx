@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, Smartphone, Globe, Lock } from 'lucide-react';
+import { Activity, Smartphone, Globe, Lock, AlertCircle } from 'lucide-react';
 import { Button } from '../components/Button';
 
 interface LoginScreenProps {
@@ -8,10 +8,27 @@ interface LoginScreenProps {
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [step, setStep] = useState<'age' | 'auth'>('age');
+  const [birthYear, setBirthYear] = useState('');
   const [error, setError] = useState('');
 
-  const handleAgeVerify = () => setStep('auth');
-  const handleUnderage = () => setError("Strictly 18+ only.");
+  const currentYear = new Date().getFullYear();
+
+  const handleAgeVerify = () => {
+    const year = parseInt(birthYear);
+    if (!year || year < 1900 || year > currentYear) {
+      setError("Please enter a valid year.");
+      return;
+    }
+    
+    const age = currentYear - year;
+    if (age < 18) {
+      setError("You must be 18+ to use Vibe.");
+      return;
+    }
+
+    setStep('auth');
+    setError('');
+  };
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-6 overflow-hidden bg-black">
@@ -26,7 +43,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       <div className="relative z-10 w-full max-w-md flex flex-col items-center">
         
         {/* Simple Brand Logo */}
-        <div className="mb-16 animate-in fade-in zoom-in duration-700 flex flex-col items-center">
+        <div className="mb-12 animate-in fade-in zoom-in duration-700 flex flex-col items-center">
            <div className="relative mb-6">
              <div className="absolute inset-0 bg-cyan-500 blur-2xl opacity-20"></div>
              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-900 to-black border border-white/10 flex items-center justify-center shadow-2xl">
@@ -42,20 +59,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                <div className="flex justify-center mb-6 text-blue-500">
                   <Lock size={32} />
                </div>
-               <h2 className="text-xl font-bold text-white mb-2 text-center">Age Verification</h2>
-               <p className="text-gray-400 text-center mb-8 text-sm leading-relaxed">
-                   Vibe is an 18+ community for casual connections. Please verify your age.
+               <h2 className="text-xl font-bold text-white mb-2 text-center">Strictly 18+</h2>
+               <p className="text-gray-400 text-center mb-6 text-sm leading-relaxed">
+                   Enter your birth year to confirm you are of legal age.
                </p>
                
-               <div className="space-y-3">
+               <div className="space-y-4">
+                 <input 
+                    type="number" 
+                    placeholder="YYYY" 
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-center text-white text-lg tracking-widest focus:border-cyan-500 focus:outline-none transition-colors"
+                 />
+                 
                  <Button fullWidth variant="primary" onClick={handleAgeVerify}>
-                    I am 18 or older
-                 </Button>
-                 <Button fullWidth variant="glass" onClick={handleUnderage} className="text-gray-400 hover:text-white">
-                    Exit App
+                    Verify Age
                  </Button>
                </div>
-               {error && <p className="text-red-500 mt-4 text-center text-xs uppercase font-bold tracking-wider">{error}</p>}
+               {error && (
+                 <div className="flex items-center justify-center gap-2 mt-4 text-red-500">
+                    <AlertCircle size={14} />
+                    <p className="text-xs uppercase font-bold tracking-wider">{error}</p>
+                 </div>
+               )}
            </div>
         ) : (
            <div className="w-full space-y-4 px-4 animate-in fade-in duration-500">
