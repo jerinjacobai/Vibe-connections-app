@@ -8,20 +8,23 @@ import { generateProfiles } from '../services/geminiService';
 interface SwipeScreenProps {
   onMatch: (profile: UserProfile) => void;
   userVibes?: string[];
+  genderInterest?: string;
 }
 
-export const SwipeScreen: React.FC<SwipeScreenProps> = ({ onMatch, userVibes = [] }) => {
+export const SwipeScreen: React.FC<SwipeScreenProps> = ({ onMatch, userVibes = [], genderInterest = 'All' }) => {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setProfiles([]);
+    setCurrentIndex(0);
     loadProfiles();
-  }, []);
+  }, [userVibes, genderInterest]); // Reload if preferences change
 
   const loadProfiles = async () => {
     setLoading(true);
-    const newProfiles = await generateProfiles(5, userVibes);
+    const newProfiles = await generateProfiles(5, userVibes, genderInterest);
     setProfiles(prev => [...prev, ...newProfiles]);
     setLoading(false);
   };
@@ -35,23 +38,12 @@ export const SwipeScreen: React.FC<SwipeScreenProps> = ({ onMatch, userVibes = [
         }
         setCurrentIndex(prev => prev + 1);
         if (profiles.length - currentIndex < 3) {
-            generateProfiles(3, userVibes).then(newP => setProfiles(prev => [...prev, ...newP]));
+            generateProfiles(3, userVibes, genderInterest).then(newP => setProfiles(prev => [...prev, ...newP]));
         }
     }, 200);
   };
 
   const swipeLeft = () => {
-     // Trigger via ref or custom event if needed, but for now we rely on the component method
-     // This needs a bit of lifting state or a ref to the top card to trigger animation programmatically
-     // Simulating swipe by finding the card and simulating drag is complex in React.
-     // For this simple implementation, we assume the user swipes mainly. 
-     // BUT to make buttons work, we will pass a 'forceSwipe' prop or similar, or just update index and let it unmount.
-     // However, for correct animation, the Card component needs to animate out.
-     // We'll handle this by passing a key that changes or a 'swipeResult' prop to the top card.
-     // For now, simpler: direct visual feedback and state update.
-     
-     // Note: Implementing programmatic swipe correctly requires refs in SwipeCard.
-     // For the sake of this demo, we will accept a simpler transition for button clicks:
      handleSwipe('left');
   };
 
@@ -64,6 +56,9 @@ export const SwipeScreen: React.FC<SwipeScreenProps> = ({ onMatch, userVibes = [
       <div className="flex flex-col items-center justify-center h-full text-cyan-500 relative bg-black">
         <Activity className="animate-pulse mb-4 text-cyan-500" size={48} />
         <p className="text-white font-bold tracking-[0.2em] text-xs uppercase opacity-70">Tuning frequency...</p>
+        <p className="text-cyan-500/50 font-bold tracking-widest text-[10px] uppercase mt-2">
+            Looking for: {genderInterest}
+        </p>
       </div>
     );
   }

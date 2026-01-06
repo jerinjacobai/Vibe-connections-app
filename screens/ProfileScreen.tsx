@@ -7,9 +7,10 @@ interface ProfileScreenProps {
     onEditPreferences?: () => void;
     profile: MyProfileData;
     onUpdateProfile: (data: Partial<MyProfileData>) => void;
+    onLogout: () => void;
 }
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences, profile, onUpdateProfile }) => {
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences, profile, onUpdateProfile, onLogout }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,7 +165,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences,
              </div>
              
              <div className="pt-4 text-center">
-                <button className="text-xs text-gray-600 hover:text-white transition-colors uppercase font-bold tracking-widest">
+                <button 
+                    onClick={onLogout}
+                    className="text-xs text-gray-600 hover:text-white transition-colors uppercase font-bold tracking-widest"
+                >
                     Log Out
                 </button>
              </div>

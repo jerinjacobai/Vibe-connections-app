@@ -19,7 +19,7 @@ const getAI = () => {
 
 const MODEL_NAME = "gemini-3-flash-preview";
 
-export const generateProfiles = async (count: number = 5, userVibes: string[] = []): Promise<UserProfile[]> => {
+export const generateProfiles = async (count: number = 5, userVibes: string[] = [], genderInterest: string = 'All'): Promise<UserProfile[]> => {
   const ai = getAI();
   
   if (!ai) {
@@ -31,9 +31,14 @@ export const generateProfiles = async (count: number = 5, userVibes: string[] = 
     const userVibeContext = userVibes.length > 0 
         ? `The user is specifically looking for: ${userVibes.join(', ')}. Ensure some profiles match these.` 
         : "";
+        
+    const genderContext = genderInterest !== 'All' 
+        ? `The user is interested in ${genderInterest} profiles. Generate mostly ${genderInterest} names and personas.`
+        : "The user is interested in all genders. Generate a mix of Male and Female profiles.";
 
     const prompt = `Generate ${count} dating profiles for a "Friends with Benefits" / Casual dating app called "Vibe". 
     Target audience: 19-30 years old.
+    ${genderContext}
     ${userVibeContext}
     
     Fields required:
@@ -44,6 +49,8 @@ export const generateProfiles = async (count: number = 5, userVibes: string[] = 
     - vibes: 2-3 specific "Buddy" types. Mix of: "Smoke Buddy", "Pluck Buddy", "Tennis Buddy", "Football Buddy", "FIFA Buddy", "CSGO Buddy", "Gym Buddy", "Club Buddy", "Travel Buddy", "Cuddle Buddy".
     - jobTitle: Use this field for a "Vibe Status" (e.g., "Partner in crime", "Bad influence").
     - distance: 1-15 miles.
+    
+    IMPORTANT: Provide valid JSON only.
 
     Return JSON array.`;
 
@@ -79,7 +86,9 @@ export const generateProfiles = async (count: number = 5, userVibes: string[] = 
     return data.map((profile: any, index: number) => ({
       ...profile,
       // Using a different seed structure to try and get more "candids" or "portraits"
-      imageUrl: `https://picsum.photos/seed/${profile.id}vibe/600/900`,
+      // We append genderInterest if specific to guide standard photo seed logic slightly if using real AI gen later, 
+      // but for Picsum, the seed is just a string. 
+      imageUrl: `https://picsum.photos/seed/${profile.id}${genderInterest === 'All' ? '' : genderInterest}vibe/600/900`,
       // Generate random initial rating between 4.5 and 9.8
       rating: Number((Math.random() * (9.8 - 4.5) + 4.5).toFixed(1)),
       ratingCount: Math.floor(Math.random() * 50) + 1

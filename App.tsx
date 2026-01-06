@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('auth');
   const [matches, setMatches] = useState<Match[]>([]);
   const [userVibes, setUserVibes] = useState<string[]>([]);
+  const [genderInterest, setGenderInterest] = useState<string>('All');
   
   // Current user profile state
   const [myProfile, setMyProfile] = useState<MyProfileData>({
@@ -34,8 +35,14 @@ const App: React.FC = () => {
     setCurrentScreen('vibe-check');
   };
 
-  const handleVibesSelected = (selectedVibes: string[]) => {
+  const handleLogout = () => {
+    setCurrentScreen('auth');
+    // Optional: Reset other state here if needed
+  };
+
+  const handleVibesSelected = (selectedVibes: string[], gender: string) => {
       setUserVibes(selectedVibes);
+      setGenderInterest(gender);
       setCurrentScreen('swipe');
   };
 
@@ -69,10 +76,11 @@ const App: React.FC = () => {
             <VibeCheckScreen 
                 onContinue={handleVibesSelected} 
                 initialVibes={userVibes} 
+                initialGender={genderInterest}
             />
         );
       case 'swipe':
-        return <SwipeScreen onMatch={handleMatch} userVibes={userVibes} />;
+        return <SwipeScreen onMatch={handleMatch} userVibes={userVibes} genderInterest={genderInterest} />;
       case 'matches':
       case 'chat':
         return <MatchesScreen matches={matches} />;
@@ -82,6 +90,7 @@ const App: React.FC = () => {
                 onEditPreferences={handleEditPreferences} 
                 profile={myProfile}
                 onUpdateProfile={handleUpdateProfile}
+                onLogout={handleLogout}
             />
         );
       default:
@@ -90,8 +99,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-black text-white overflow-hidden flex flex-col">
-      <main className="flex-1 relative overflow-hidden">
+    // Fixed positioning ensures we take up the visual viewport exactly, helping with mobile browser chrome
+    <div className="fixed inset-0 bg-black text-white overflow-hidden flex flex-col">
+      <main className="flex-1 relative overflow-hidden flex flex-col">
         {renderScreen()}
       </main>
       

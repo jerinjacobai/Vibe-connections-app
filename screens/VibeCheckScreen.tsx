@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/Button';
-import { Activity, Check, Plus, X } from 'lucide-react';
+import { Activity, Check, Plus, X, Users, User, UserCheck } from 'lucide-react';
 
 interface VibeCheckScreenProps {
-  onContinue: (selectedVibes: string[]) => void;
+  onContinue: (selectedVibes: string[], genderInterest: string) => void;
   initialVibes?: string[];
+  initialGender?: string;
 }
 
 const DEFAULT_VIBES = [
@@ -15,14 +16,21 @@ const DEFAULT_VIBES = [
   "Gaming Buddy", "Rave Buddy", "FWB", "Hookup Buddy"
 ];
 
-export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue, initialVibes = [] }) => {
+const GENDERS = ["Male", "Female", "Other", "All"];
+
+export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue, initialVibes = [], initialGender = 'All' }) => {
   const [selected, setSelected] = useState<string[]>(initialVibes);
+  const [genderInterest, setGenderInterest] = useState<string>(initialGender);
   const [customVibe, setCustomVibe] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
       setSelected(initialVibes);
   }, [initialVibes]);
+  
+  useEffect(() => {
+      if (initialGender) setGenderInterest(initialGender);
+  }, [initialGender]);
 
   const toggleVibe = (vibe: string) => {
     if (selected.includes(vibe)) {
@@ -52,8 +60,8 @@ export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue, in
         <div className="absolute top-[-20%] right-[-20%] w-[50%] h-[50%] bg-cyan-900/20 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="relative z-10 flex-1 flex flex-col">
-            <div className="mt-8 mb-6 text-center">
+        <div className="relative z-10 flex-1 flex flex-col min-h-0">
+            <div className="mt-4 mb-4 text-center flex-shrink-0">
                 <div className="flex justify-center mb-4">
                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-900/50 to-blue-900/50 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.2)]">
                         <Activity size={32} className="text-cyan-400" />
@@ -65,12 +73,12 @@ export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue, in
 
             {/* Selected Vibes Chips */}
             {selected.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4 justify-center">
+                <div className="flex flex-wrap gap-2 mb-4 justify-center flex-shrink-0 max-h-32 overflow-y-auto hide-scrollbar">
                     {selected.map(vibe => (
                         <button 
                             key={`selected-${vibe}`}
                             onClick={() => toggleVibe(vibe)}
-                            className="flex items-center gap-1 pl-3 pr-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold"
+                            className="flex items-center gap-1 pl-3 pr-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all hover:bg-cyan-500/30"
                         >
                             {vibe} <X size={12} />
                         </button>
@@ -78,8 +86,40 @@ export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue, in
                 </div>
             )}
 
-            <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar mb-4">
-                <div className="grid grid-cols-2 gap-3">
+            {/* Scrollable Container with min-h-0 to enable proper flex scrolling */}
+            <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar min-h-0">
+                
+                {/* Gender Selection Section */}
+                <div className="mb-6">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 pl-1">Looking For</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                        {GENDERS.map(gender => {
+                            const isActive = genderInterest === gender;
+                            return (
+                                <button
+                                    key={gender}
+                                    onClick={() => setGenderInterest(gender)}
+                                    className={`py-3 rounded-xl border font-bold text-xs transition-all flex flex-col items-center gap-1 ${
+                                        isActive 
+                                        ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
+                                        : 'bg-gray-900/50 text-gray-400 border-white/10 hover:border-white/20 hover:text-white'
+                                    }`}
+                                >
+                                    {gender === 'All' ? <Users size={16} /> : 
+                                     gender === 'Male' ? <User size={16} /> :
+                                     gender === 'Female' ? <UserCheck size={16} /> :
+                                     <Activity size={16} />
+                                    }
+                                    {gender}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Vibes Section */}
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 pl-1">Select Vibes</h3>
+                <div className="grid grid-cols-2 gap-3 pb-4">
                     {allDisplayVibes.map((vibe) => {
                         const isSelected = selected.includes(vibe);
                         return (
@@ -137,19 +177,19 @@ export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue, in
                 </div>
             </div>
 
-            <div className="mt-auto pt-4">
+            <div className="mt-4 flex-shrink-0 pt-2 pb-6 border-t border-white/5 bg-black/90 backdrop-blur -mx-6 px-6 z-20">
                 <Button 
                     fullWidth 
                     variant="primary" 
-                    onClick={() => onContinue(selected)}
+                    onClick={() => onContinue(selected, genderInterest)}
                     disabled={selected.length === 0}
-                    className="h-16 text-lg"
+                    className="h-14 text-lg mb-3"
                 >
                     {selected.length === 0 ? "Select a Vibe" : `Find ${selected.length} Vibes`}
                 </Button>
                 <button 
-                    onClick={() => onContinue([])} 
-                    className="w-full py-4 text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors"
+                    onClick={() => onContinue([], 'All')} 
+                    className="w-full text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors"
                 >
                     Skip for now
                 </button>
