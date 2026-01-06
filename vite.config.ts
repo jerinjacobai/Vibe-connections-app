@@ -3,8 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  const env = loadEnv(mode, (process as any).cwd(), '');
+  const env = loadEnv(mode, '.', '');
   
   return {
     plugins: [react()],
@@ -13,7 +12,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       // Inject the API Key globally so the GoogleGenAI client can read it from process.env.API_KEY
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Fallback to empty string if undefined to prevents build errors, handled at runtime
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || '')
     }
   };
 });

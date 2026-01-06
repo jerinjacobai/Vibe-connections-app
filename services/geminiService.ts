@@ -1,11 +1,32 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization to prevent crash on module load if key is missing
+let aiClient: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!aiClient) {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.warn("API Key is missing. The app will use fallback data.");
+      // We don't throw here to allow the app to load, but subsequent calls will fail or use mock data
+      return null;
+    }
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+  return aiClient;
+};
 
 const MODEL_NAME = "gemini-3-flash-preview";
 
 export const generateProfiles = async (count: number = 5, userVibes: string[] = []): Promise<UserProfile[]> => {
+  const ai = getAI();
+  
+  if (!ai) {
+    // Return fallback data immediately if no API key
+    return getFallbackProfiles();
+  }
+
   try {
     const userVibeContext = userVibes.length > 0 
         ? `The user is specifically looking for: ${userVibes.join(', ')}. Ensure some profiles match these.` 
@@ -66,42 +87,14 @@ export const generateProfiles = async (count: number = 5, userVibes: string[] = 
 
   } catch (error) {
     console.error("Failed to generate profiles", error);
-    return [
-      {
-        id: "fallback-1",
-        name: "Sasha",
-        age: 23,
-        bio: "Here for a good time, not a long time. 🌙",
-        jobTitle: "Night Owl",
-        interests: ["Clubbing", "Afters", "Spicy Food"],
-        vibes: ["Smoke Buddy", "Club Buddy"],
-        imageUrl: "https://picsum.photos/seed/sasha/600/900",
-        distance: 2,
-        mood: "Wild",
-        lookingFor: "Fun tonight",
-        rating: 8.9,
-        ratingCount: 12
-      },
-      {
-        id: "fallback-2",
-        name: "Jay",
-        age: 26,
-        bio: "Gym rat by day, gamer by night. Need player 2.",
-        jobTitle: "Chill Vibes Only",
-        interests: ["Gym", "Gaming", "Drive"],
-        vibes: ["FIFA Buddy", "Gym Buddy"],
-        imageUrl: "https://picsum.photos/seed/jay/600/900",
-        distance: 5,
-        mood: "Chill",
-        lookingFor: "Gaming buddy +",
-        rating: 7.5,
-        ratingCount: 8
-      }
-    ];
+    return getFallbackProfiles();
   }
 };
 
 export const generateIcebreaker = async (profile: UserProfile): Promise<string> => {
+    const ai = getAI();
+    if (!ai) return "Hey, love your vibe.";
+
     try {
         const response = await ai.models.generateContent({
             model: MODEL_NAME,
@@ -112,3 +105,51 @@ export const generateIcebreaker = async (profile: UserProfile): Promise<string> 
         return "Hey, love your vibe.";
     }
 }
+
+const getFallbackProfiles = (): UserProfile[] => [
+  {
+    id: "fallback-1",
+    name: "Sasha",
+    age: 23,
+    bio: "Here for a good time, not a long time. 🌙",
+    jobTitle: "Night Owl",
+    interests: ["Clubbing", "Afters", "Spicy Food"],
+    vibes: ["Smoke Buddy", "Club Buddy"],
+    imageUrl: "https://picsum.photos/seed/sasha/600/900",
+    distance: 2,
+    mood: "Wild",
+    lookingFor: "Fun tonight",
+    rating: 8.9,
+    ratingCount: 12
+  },
+  {
+    id: "fallback-2",
+    name: "Jay",
+    age: 26,
+    bio: "Gym rat by day, gamer by night. Need player 2.",
+    jobTitle: "Chill Vibes Only",
+    interests: ["Gym", "Gaming", "Drive"],
+    vibes: ["FIFA Buddy", "Gym Buddy"],
+    imageUrl: "https://picsum.photos/seed/jay/600/900",
+    distance: 5,
+    mood: "Chill",
+    lookingFor: "Gaming buddy +",
+    rating: 7.5,
+    ratingCount: 8
+  },
+  {
+    id: "fallback-3",
+    name: "Riley",
+    age: 24,
+    bio: "Spontaneous adventures? I'm in.",
+    jobTitle: "Explorer",
+    interests: ["Hiking", "Photography", "Coffee"],
+    vibes: ["Hiking Buddy", "Travel Buddy"],
+    imageUrl: "https://picsum.photos/seed/riley/600/900",
+    distance: 8,
+    mood: "Spontaneous",
+    lookingFor: "Adventure",
+    rating: 9.2,
+    ratingCount: 5
+  }
+];
