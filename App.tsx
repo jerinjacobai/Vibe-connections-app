@@ -23,6 +23,10 @@ const App: React.FC = () => {
       setCurrentScreen('swipe');
   };
 
+  const handleEditPreferences = () => {
+      setCurrentScreen('vibe-check');
+  };
+
   const handleMatch = (profile: UserProfile) => {
     // 40% chance of immediate match for demo purposes
     const isMatch = Math.random() > 0.6;
@@ -45,14 +49,19 @@ const App: React.FC = () => {
       case 'auth':
         return <LoginScreen onLogin={handleLogin} />;
       case 'vibe-check':
-        return <VibeCheckScreen onContinue={handleVibesSelected} />;
+        return (
+            <VibeCheckScreen 
+                onContinue={handleVibesSelected} 
+                initialVibes={userVibes} 
+            />
+        );
       case 'swipe':
         return <SwipeScreen onMatch={handleMatch} userVibes={userVibes} />;
       case 'matches':
       case 'chat':
         return <MatchesScreen matches={matches} />;
       case 'profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onEditPreferences={handleEditPreferences} />;
       default:
         return <LoginScreen onLogin={handleLogin} />;
     }

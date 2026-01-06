@@ -2,7 +2,11 @@ import React from 'react';
 import { Settings, Edit2, Crown, Activity, Star } from 'lucide-react';
 import { Button } from '../components/Button';
 
-export const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+    onEditPreferences?: () => void;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences }) => {
   return (
     <div className="h-full flex flex-col items-center p-6 overflow-y-auto bg-black">
         <div className="relative mb-6 mt-8">
@@ -44,9 +48,14 @@ export const ProfileScreen: React.FC = () => {
         </div>
 
         <div className="w-full max-w-sm space-y-4">
-             <Button fullWidth variant="glass" className="justify-start px-6 bg-gray-900/50 border-white/5 h-14">
+             <Button 
+                fullWidth 
+                variant="glass" 
+                className="justify-start px-6 bg-gray-900/50 border-white/5 h-14"
+                onClick={onEditPreferences}
+             >
                 <Settings className="mr-3 text-gray-400" size={20} />
-                <span className="text-gray-200">Preferences</span>
+                <span className="text-gray-200">Vibe Preferences</span>
              </Button>
              
              <div className="relative overflow-hidden p-6 rounded-3xl border border-blue-500/30 text-center group cursor-pointer">
