@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, Smartphone, Globe, Lock, AlertCircle } from 'lucide-react';
+import { Activity, Smartphone, Globe, Lock, AlertCircle, CheckSquare, Square } from 'lucide-react';
 import { Button } from '../components/Button';
 
 interface LoginScreenProps {
@@ -9,11 +9,17 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [step, setStep] = useState<'age' | 'auth'>('age');
   const [birthYear, setBirthYear] = useState('');
+  const [confirmed18, setConfirmed18] = useState(false);
   const [error, setError] = useState('');
 
   const currentYear = new Date().getFullYear();
 
   const handleAgeVerify = () => {
+    if (!confirmed18) {
+      setError("Please confirm you are 18+.");
+      return;
+    }
+
     const year = parseInt(birthYear);
     if (!year || year < 1900 || year > currentYear) {
       setError("Please enter a valid year.");
@@ -61,7 +67,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                </div>
                <h2 className="text-xl font-bold text-white mb-2 text-center">Strictly 18+</h2>
                <p className="text-gray-400 text-center mb-6 text-sm leading-relaxed">
-                   Enter your birth year to confirm you are of legal age.
+                   Vibe is for adults only. Verification required.
                </p>
                
                <div className="space-y-4">
@@ -72,6 +78,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     onChange={(e) => setBirthYear(e.target.value)}
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-center text-white text-lg tracking-widest focus:border-cyan-500 focus:outline-none transition-colors"
                  />
+                 
+                 <div 
+                   onClick={() => setConfirmed18(!confirmed18)}
+                   className="flex items-center gap-3 cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors"
+                 >
+                   {confirmed18 ? (
+                     <CheckSquare className="text-cyan-500 flex-shrink-0" size={20} />
+                   ) : (
+                     <Square className="text-gray-500 flex-shrink-0" size={20} />
+                   )}
+                   <span className="text-xs text-gray-300 select-none">
+                     I confirm that I am at least 18 years old and agree to the Terms of Service.
+                   </span>
+                 </div>
                  
                  <Button fullWidth variant="primary" onClick={handleAgeVerify}>
                     Verify Age
