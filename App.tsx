@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppScreen, Match, UserProfile } from './types';
+import { AppScreen, Match, UserProfile, MyProfileData } from './types';
 import { LoginScreen } from './screens/LoginScreen';
 import { SwipeScreen } from './screens/SwipeScreen';
 import { MatchesScreen } from './screens/MatchesScreen';
@@ -11,6 +11,22 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('auth');
   const [matches, setMatches] = useState<Match[]>([]);
   const [userVibes, setUserVibes] = useState<string[]>([]);
+  
+  // Current user profile state
+  const [myProfile, setMyProfile] = useState<MyProfileData>({
+      name: "Alex",
+      age: 24,
+      bio: "Looking for fun",
+      mainImage: "https://picsum.photos/seed/me_vibe/400/400",
+      gallery: [
+           "https://picsum.photos/seed/gal1/400/600",
+           "https://picsum.photos/seed/gal2/400/600",
+      ]
+  });
+
+  const handleUpdateProfile = (data: Partial<MyProfileData>) => {
+      setMyProfile(prev => ({ ...prev, ...data }));
+  };
 
   // Simple authentication flow
   const handleLogin = () => {
@@ -61,7 +77,13 @@ const App: React.FC = () => {
       case 'chat':
         return <MatchesScreen matches={matches} />;
       case 'profile':
-        return <ProfileScreen onEditPreferences={handleEditPreferences} />;
+        return (
+            <ProfileScreen 
+                onEditPreferences={handleEditPreferences} 
+                profile={myProfile}
+                onUpdateProfile={handleUpdateProfile}
+            />
+        );
       default:
         return <LoginScreen onLogin={handleLogin} />;
     }

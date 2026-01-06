@@ -30,6 +30,14 @@ export interface Message {
   timestamp: Date;
 }
 
+export interface MyProfileData {
+  name: string;
+  age: number;
+  bio: string;
+  mainImage: string;
+  gallery: string[];
+}
+
 export type AppScreen = 'auth' | 'vibe-check' | 'swipe' | 'matches' | 'chat' | 'profile';
 
 export interface ChatSession {

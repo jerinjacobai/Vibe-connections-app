@@ -1,35 +1,92 @@
-import React from 'react';
-import { Settings, Edit2, Crown, Activity, Star } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Settings, Edit2, Activity, Star, Plus, Trash2, Camera } from 'lucide-react';
 import { Button } from '../components/Button';
+import { MyProfileData } from '../types';
 
 interface ProfileScreenProps {
     onEditPreferences?: () => void;
+    profile: MyProfileData;
+    onUpdateProfile: (data: Partial<MyProfileData>) => void;
 }
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences }) => {
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences, profile, onUpdateProfile }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMainImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              onUpdateProfile({ mainImage: reader.result as string });
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              onUpdateProfile({ gallery: [...profile.gallery, reader.result as string] });
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const removeGalleryImage = (index: number) => {
+      const newGallery = [...profile.gallery];
+      newGallery.splice(index, 1);
+      onUpdateProfile({ gallery: newGallery });
+  };
+
   return (
-    <div className="h-full flex flex-col items-center p-6 overflow-y-auto bg-black">
-        <div className="relative mb-6 mt-8">
+    <div className="h-full flex flex-col items-center p-6 overflow-y-auto bg-black hide-scrollbar">
+        {/* Hidden File Inputs */}
+        <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleMainImageUpload}
+        />
+        <input 
+            type="file" 
+            ref={galleryInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleGalleryUpload}
+        />
+
+        <div className="relative mb-6 mt-8 group">
             <div className="w-32 h-32 rounded-full p-[2px] bg-gradient-to-tr from-cyan-500 via-blue-500 to-indigo-600">
-                <div className="w-full h-full rounded-full border-4 border-black overflow-hidden">
-                    <img src="https://picsum.photos/seed/me_vibe/400/400" alt="My Profile" className="w-full h-full object-cover" />
+                <div className="w-full h-full rounded-full border-4 border-black overflow-hidden relative">
+                    <img src={profile.mainImage} alt="My Profile" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                        <Camera size={24} className="text-white" />
+                    </div>
                 </div>
             </div>
-            <button className="absolute bottom-1 right-1 bg-gray-900 p-2.5 rounded-full border border-gray-700 text-white hover:bg-gray-800">
+            <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-1 right-1 bg-gray-900 p-2.5 rounded-full border border-gray-700 text-white hover:bg-gray-800 transition-colors shadow-lg"
+            >
                 <Edit2 size={14} />
             </button>
         </div>
 
-        <h2 className="text-3xl font-black text-white mb-1 tracking-tight">Alex, 24</h2>
+        <h2 className="text-3xl font-black text-white mb-1 tracking-tight">{profile.name}, {profile.age}</h2>
         <div className="flex items-center gap-2 mb-8">
              <div className="px-2 py-0.5 rounded bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
                  Chill Vibe
              </div>
              <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
-             <p className="text-gray-400 text-sm">Looking for fun</p>
+             <p className="text-gray-400 text-sm">{profile.bio}</p>
         </div>
 
-        <div className="flex gap-4 mb-10 w-full max-w-sm">
+        {/* Stats Row */}
+        <div className="flex gap-4 mb-8 w-full max-w-sm">
             <div className="flex-1 bg-gray-900/50 rounded-2xl p-4 flex flex-col items-center justify-center border border-white/5 backdrop-blur-sm">
                 <div className="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
                     <Activity size={20} />
@@ -38,7 +95,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences 
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Vibes</span>
             </div>
             <div className="flex-1 bg-gray-900/50 rounded-2xl p-4 flex flex-col items-center justify-center border border-white/5 backdrop-blur-sm relative overflow-hidden">
-                 {/* Rating display */}
                 <div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(250,204,21,0.2)] z-10">
                     <Star size={20} fill="currentColor" />
                 </div>
@@ -47,7 +103,43 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences 
             </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-4">
+        {/* Gallery Section */}
+        <div className="w-full max-w-sm mb-8">
+            <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">My Photos</h3>
+                 <span className="text-[10px] text-gray-600">{profile.gallery.length} / 6</span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+                {profile.gallery.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-white/10">
+                        <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button 
+                                onClick={() => removeGalleryImage(idx)}
+                                className="p-1.5 bg-red-500/80 rounded-full text-white hover:bg-red-500 transition-colors"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                
+                {/* Add Photo Button */}
+                {profile.gallery.length < 6 && (
+                    <button 
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="aspect-square rounded-xl border-2 border-dashed border-gray-800 flex flex-col items-center justify-center gap-2 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors">
+                            <Plus size={16} className="text-gray-400 group-hover:text-cyan-400" />
+                        </div>
+                    </button>
+                )}
+            </div>
+        </div>
+
+        <div className="w-full max-w-sm space-y-4 pb-24">
              <Button 
                 fullWidth 
                 variant="glass" 
@@ -70,12 +162,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences 
                     </button>
                 </div>
              </div>
-        </div>
-        
-        <div className="mt-auto pt-8 pb-24">
-            <button className="text-xs text-gray-600 hover:text-white transition-colors uppercase font-bold tracking-widest">
-                Log Out
-            </button>
+             
+             <div className="pt-4 text-center">
+                <button className="text-xs text-gray-600 hover:text-white transition-colors uppercase font-bold tracking-widest">
+                    Log Out
+                </button>
+             </div>
         </div>
     </div>
   );
