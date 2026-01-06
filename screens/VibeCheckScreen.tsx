@@ -1,0 +1,91 @@
+import React, { useState } from 'react';
+import { Button } from '../components/Button';
+import { Activity, Check } from 'lucide-react';
+
+interface VibeCheckScreenProps {
+  onContinue: (selectedVibes: string[]) => void;
+}
+
+const AVAILABLE_VIBES = [
+  "Smoke Buddy", "Pluck Buddy", "Tennis Buddy", 
+  "Football Buddy", "FIFA Buddy", "CSGO Buddy", 
+  "Gym Buddy", "Drinking Buddy", "Study Buddy", 
+  "Travel Buddy", "Hiking Buddy", "Cuddle Buddy",
+  "Gaming Buddy", "Rave Buddy"
+];
+
+export const VibeCheckScreen: React.FC<VibeCheckScreenProps> = ({ onContinue }) => {
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const toggleVibe = (vibe: string) => {
+    if (selected.includes(vibe)) {
+      setSelected(selected.filter(v => v !== vibe));
+    } else {
+      setSelected([...selected, vibe]);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col p-6 bg-black relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute top-[-20%] right-[-20%] w-[50%] h-[50%] bg-cyan-900/20 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="relative z-10 flex-1 flex flex-col">
+            <div className="mt-8 mb-8 text-center">
+                <div className="flex justify-center mb-4">
+                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-900/50 to-blue-900/50 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.2)]">
+                        <Activity size={32} className="text-cyan-400" />
+                     </div>
+                </div>
+                <h1 className="text-3xl font-black text-white italic tracking-tighter mb-2">VIBE CHECK</h1>
+                <p className="text-gray-400 text-sm">What kind of energy are you looking for?</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-8 overflow-y-auto pb-4 pr-1 hide-scrollbar">
+                {AVAILABLE_VIBES.map((vibe) => {
+                    const isSelected = selected.includes(vibe);
+                    return (
+                        <button
+                            key={vibe}
+                            onClick={() => toggleVibe(vibe)}
+                            className={`relative group overflow-hidden p-4 rounded-xl border transition-all duration-300 text-left flex items-center justify-between ${
+                                isSelected 
+                                ? 'bg-cyan-500 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)]' 
+                                : 'bg-gray-900/50 border-white/10 hover:border-white/20'
+                            }`}
+                        >
+                            <span className={`font-bold text-sm tracking-wide ${isSelected ? 'text-black' : 'text-gray-300'}`}>
+                                {vibe}
+                            </span>
+                            {isSelected && (
+                                <div className="bg-black/20 rounded-full p-1">
+                                    <Check size={12} className="text-black" />
+                                </div>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
+            <div className="mt-auto pt-4">
+                <Button 
+                    fullWidth 
+                    variant="primary" 
+                    onClick={() => onContinue(selected)}
+                    disabled={selected.length === 0}
+                    className="h-16 text-lg"
+                >
+                    {selected.length === 0 ? "Select a Vibe" : `Find ${selected.length} Vibes`}
+                </Button>
+                <button 
+                    onClick={() => onContinue([])} 
+                    className="w-full py-4 text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors"
+                >
+                    Skip for now
+                </button>
+            </div>
+        </div>
+    </div>
+  );
+};
