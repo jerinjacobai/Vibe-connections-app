@@ -1,0 +1,7 @@
+{
+  "name": "Vibe - Casual Connections",
+  "description": "Connect purely on vibe. No strings, just sparks. The premier app for FWB and casual dating.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
