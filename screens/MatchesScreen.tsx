@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Match, Message, UserProfile } from '../types';
-import { ArrowLeft, Send, Sparkles, Star, X } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Star, X, MoreVertical, Phone, Video } from 'lucide-react';
 import { generateIcebreaker } from '../services/geminiService';
+import { GlassCard } from '../components/GlassCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MatchesScreenProps {
     matches: Match[];
@@ -15,13 +17,20 @@ export const MatchesScreen: React.FC<MatchesScreenProps> = ({ matches, onUpdateM
     const [loadingIcebreaker, setLoadingIcebreaker] = useState(false);
     const [showRatingModal, setShowRatingModal] = useState(false);
     const [ratedSession, setRatedSession] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, activeMatch]);
 
     const handleOpenChat = async (match: Match) => {
         setActiveMatch(match);
         setShowRatingModal(false);
         setRatedSession(false);
-
-        // Mark as read
         if (match.unread) {
             onUpdateMatch(match.id, { unread: false });
         }
@@ -42,7 +51,6 @@ export const MatchesScreen: React.FC<MatchesScreenProps> = ({ matches, onUpdateM
             [activeMatch.id]: [...(prev[activeMatch.id] || []), newMessage]
         }));
 
-        // Update last message in match object for list view (optional but good)
         onUpdateMatch(activeMatch.id, {
             lastMessage: inputText,
             timestamp: new Date().toISOString()
@@ -53,7 +61,7 @@ export const MatchesScreen: React.FC<MatchesScreenProps> = ({ matches, onUpdateM
         setTimeout(() => {
             const response: Message = {
                 id: (Date.now() + 1).toString(),
-                text: "That's interesting! Tell me more :)",
+                text: "That's a vibe! Tell me more ✨",
                 sender: 'them',
                 timestamp: new Date()
             };
@@ -74,14 +82,10 @@ export const MatchesScreen: React.FC<MatchesScreenProps> = ({ matches, onUpdateM
 
     const handleRateUser = (score: number) => {
         if (!activeMatch) return;
-
         const currentRating = activeMatch.profile.rating || 0;
         const count = activeMatch.profile.ratingCount || 1;
-
-        // Calculate new weighted average
         const newRating = ((currentRating * count) + score) / (count + 1);
 
-        // Update via parent prop
         onUpdateMatch(activeMatch.id, {
             profile: {
                 rating: Number(newRating.toFixed(1)),
@@ -93,198 +97,238 @@ export const MatchesScreen: React.FC<MatchesScreenProps> = ({ matches, onUpdateM
         setShowRatingModal(false);
     };
 
-    // Rating Modal
-    const RatingModal = () => (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-gray-900 border border-white/10 p-6 rounded-3xl w-full max-w-xs text-center shadow-2xl">
-                <div className="flex justify-end mb-2">
-                    <button onClick={() => setShowRatingModal(false)} className="text-gray-500 hover:text-white"><X size={20} /></button>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">Rate Vibes</h3>
-                <p className="text-gray-400 text-sm mb-6">How was your interaction with {activeMatch?.profile.name}?</p>
-
-                <div className="grid grid-cols-5 gap-2 mb-6">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
-                        <button
-                            key={score}
-                            onClick={() => handleRateUser(score)}
-                            className={`aspect-square rounded-xl font-bold text-sm transition-all ${score >= 8 ? 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500 hover:text-white' :
-                                    score >= 5 ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white' :
-                                        'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
-                                }`}
-                        >
-                            {score}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-
     // Chat View
     if (activeMatch) {
         const currentMessages = messages[activeMatch.id] || [];
-        // Important: Get the LATEST activeMatch from props to reflect updates (like rating)
         const currentActiveMatch = matches.find(m => m.id === activeMatch.id) || activeMatch;
 
         return (
-            <div className="flex flex-col h-full bg-black relative">
-                {showRatingModal && <RatingModal />}
+            <div className="flex flex-col h-full bg-void relative font-outfit">
+                {/* Detail/Rating Modal Overlay */}
+                <AnimatePresence>
+                    {showRatingModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6"
+                        >
+                            <GlassCard className="w-full max-w-sm p-6" variant="neon">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-white tracking-wide">Vibe Check</h3>
+                                    <button onClick={() => setShowRatingModal(false)}><X className="text-gray-400 hover:text-white" /></button>
+                                </div>
+                                <p className="text-gray-300 text-sm mb-6 text-center">How was the energy with {activeMatch.profile.name}?</p>
+                                <div className="grid grid-cols-5 gap-3">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+                                        <button
+                                            key={score}
+                                            onClick={() => handleRateUser(score)}
+                                            className={`aspect-square rounded-xl font-bold text-sm transition-all border border-white/10 ${score >= 8 ? 'bg-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan hover:text-black hover:shadow-[0_0_15px_rgba(0,240,255,0.5)]' :
+                                                    score >= 5 ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white' :
+                                                        'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-white'
+                                                }`}
+                                        >
+                                            {score}
+                                        </button>
+                                    ))}
+                                </div>
+                            </GlassCard>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                {/* Glass Header */}
-                <div className="flex items-center justify-between p-4 glass-heavy z-20">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setActiveMatch(null)} className="text-gray-300 hover:text-white transition-colors">
-                            <ArrowLeft size={24} />
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 bg-midnight/80 backdrop-blur-xl border-b border-white/5 z-20 shadow-lg">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setActiveMatch(null)} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors">
+                            <ArrowLeft size={20} className="text-gray-300" />
                         </button>
-                        <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden relative">
-                            <img src={currentActiveMatch.profile.imageUrl} alt={currentActiveMatch.profile.name} className="w-full h-full object-cover" />
+                        <div className="relative">
+                            <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden">
+                                <img src={currentActiveMatch.profile.imageUrl} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-neon-cyan rounded-full border-2 border-midnight shadow-[0_0_8px_rgba(0,240,255,0.8)]"></div>
                         </div>
                         <div>
-                            <h3 className="font-bold text-white text-base tracking-wide flex items-center gap-2">
+                            <h3 className="font-bold text-white text-base leading-tight flex items-center gap-2">
                                 {currentActiveMatch.profile.name}
-                                <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-white/5 rounded text-[10px] text-yellow-400 border border-white/5">
+                                <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-yellow-500/10 rounded text-[10px] text-yellow-400 border border-yellow-500/20">
                                     <Star size={8} fill="currentColor" />
                                     {currentActiveMatch.profile.rating}
                                 </div>
                             </h3>
-                            <div className="flex items-center gap-1">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                <span className="text-xs text-gray-400">Online</span>
-                            </div>
+                            <span className="text-xs text-neon-cyan/80 font-medium tracking-wide">Online Now</span>
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => !ratedSession && setShowRatingModal(true)}
-                        disabled={ratedSession}
-                        className={`p-2 rounded-full border transition-all ${ratedSession
-                                ? 'bg-yellow-500/20 border-yellow-500 text-yellow-500'
-                                : 'bg-white/5 border-white/10 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/50'
-                            }`}
-                    >
-                        <Star size={20} fill={ratedSession ? "currentColor" : "none"} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                            <Phone size={18} />
+                        </button>
+                        <button className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                            <Video size={18} />
+                        </button>
+                        <button
+                            onClick={() => !ratedSession && setShowRatingModal(true)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${ratedSession ? 'text-yellow-400 bg-yellow-400/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        >
+                            <MoreVertical size={18} />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+                {/* Messages Area */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24 hide-scrollbar">
                     {currentMessages.length === 0 && (
-                        <div className="text-center mt-12 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="w-24 h-24 rounded-full mx-auto overflow-hidden mb-4 border-2 border-cyan-500 shadow-[0_0_30px_rgba(34,211,238,0.3)]">
-                                <img src={currentActiveMatch.profile.imageUrl} alt="" className="w-full h-full object-cover" />
+                        <div className="flex flex-col items-center justify-center mt-12 animate-in fade-in zoom-in duration-500">
+                            <div className="relative mb-6">
+                                <div className="absolute inset-0 bg-neon-cyan blur-2xl opacity-20 animate-pulse"></div>
+                                <div className="w-24 h-24 rounded-full border-2 border-neon-cyan p-1 relative z-10">
+                                    <img src={currentActiveMatch.profile.imageUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                                </div>
+                                <div className="absolute -bottom-2 -right-2 bg-black rounded-full p-2 border border-white/10">
+                                    <Sparkles size={20} className="text-neon-purple" />
+                                </div>
                             </div>
-                            <p className="text-gray-400 text-sm mb-6">You matched with <span className="text-white font-bold">{currentActiveMatch.profile.name}</span>!</p>
+                            <p className="text-gray-400 text-sm mb-6 text-center max-w-[200px]">
+                                You matched with <span className="text-white font-bold">{currentActiveMatch.profile.name}</span>! <br /> Their vibe matches yours.
+                            </p>
                             <button
                                 onClick={handleAIHelp}
                                 disabled={loadingIcebreaker}
-                                className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-bold uppercase tracking-wider rounded-full px-6 py-3 hover:shadow-lg hover:shadow-cyan-500/30 transition-all flex items-center gap-2 mx-auto"
+                                className="group relative px-6 py-3 bg-white/5 hover:bg-white/10 border border-neon-cyan/30 rounded-full transition-all hover:scale-105 active:scale-95"
                             >
-                                <Sparkles size={14} />
-                                {loadingIcebreaker ? "Generating..." : "Break the Ice"}
+                                <div className="absolute inset-0 bg-neon-cyan/5 blur-lg group-hover:bg-neon-cyan/10 transition-colors"></div>
+                                <span className="relative z-10 flex items-center gap-2 text-xs font-bold text-neon-cyan tracking-wider uppercase">
+                                    <Sparkles size={14} className={loadingIcebreaker ? "animate-spin" : ""} />
+                                    {loadingIcebreaker ? "Scanning..." : "Generate Icebreaker"}
+                                </span>
                             </button>
                         </div>
                     )}
+
                     {currentMessages.map((msg) => (
-                        <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[80%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${msg.sender === 'me'
-                                    ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white rounded-tr-sm shadow-md'
-                                    : 'bg-gray-800/80 backdrop-blur text-gray-100 rounded-tl-sm border border-white/5'
+                        <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            key={msg.id}
+                            className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`max-w-[80%] px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-lg ${msg.sender === 'me'
+                                    ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white rounded-tr-sm shadow-neon-purple/20'
+                                    : 'bg-white/5 backdrop-blur-md border border-white/5 text-gray-100 rounded-tl-sm shadow-black/20'
                                 }`}>
                                 {msg.text}
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
+                    <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input */}
-                <div className="p-4 bg-black/80 backdrop-blur-xl border-t border-white/10 safe-bottom fixed bottom-0 left-0 right-0 z-20">
-                    <div className="flex gap-3 max-w-lg mx-auto">
+                {/* Input Area */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/90 to-transparent pb-6">
+                    <GlassCard className="flex items-center gap-2 p-1.5 rounded-full" variant="light">
                         <input
                             type="text"
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             placeholder="Type a message..."
-                            className="flex-1 bg-gray-900/50 border border-white/10 rounded-full px-6 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:bg-gray-900 transition-all"
+                            className="flex-1 bg-transparent border-none px-4 py-3 text-white placeholder-gray-500 focus:outline-none text-sm"
                             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                         />
                         <button
                             onClick={handleSendMessage}
-                            className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-500 shadow-lg shadow-blue-600/20 transition-all"
+                            disabled={!inputText.trim()}
+                            className="w-10 h-10 rounded-full bg-neon-cyan text-black flex items-center justify-center hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(0,240,255,0.4)]"
                         >
-                            <Send size={20} className="ml-0.5" />
+                            <Send size={18} className="ml-0.5" />
                         </button>
-                    </div>
+                    </GlassCard>
                 </div>
             </div>
         );
     }
 
-    // Matches List View
+    // List View
     return (
-        <div className="h-full flex flex-col p-6 bg-black pb-24">
-            <div className="flex justify-between items-end mb-8">
-                <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Connections</h1>
-                <span className="text-cyan-400 font-bold text-sm bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">{matches.filter(m => m.unread).length} New</span>
-            </div>
+        <div className="h-full flex flex-col p-6 bg-void font-outfit pb-24 relative overflow-hidden">
+            {/* Background Ambience */}
+            <div className="absolute top-0 right-0 w-[80%] h-[30%] bg-neon-purple/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-            {/* Horizontal Scroll - New Matches */}
-            <div className="mb-8">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">New Matches</p>
-                <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
-                    {matches.length === 0 && (
-                        <div className="flex flex-col items-center justify-center w-full py-8 border-2 border-dashed border-gray-800 rounded-2xl">
-                            <p className="text-gray-500 text-sm">No matches yet.</p>
-                            <p className="text-gray-600 text-xs mt-1">Get swiping!</p>
-                        </div>
-                    )}
-                    {matches.map(match => (
-                        <div key={match.id} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[70px]" onClick={() => handleOpenChat(match)}>
-                            <div className="w-18 h-18 rounded-full p-[3px] bg-gradient-to-tr from-cyan-500 via-blue-500 to-indigo-500 group-hover:scale-105 transition-transform duration-300">
-                                <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative">
-                                    <img src={match.profile.imageUrl} alt={match.profile.name} className="w-full h-full object-cover" />
-                                    <div className="absolute bottom-0 inset-x-0 bg-black/60 h-4 flex items-center justify-center gap-0.5">
-                                        <Star size={6} className="text-yellow-400 fill-yellow-400" />
-                                        <span className="text-[8px] font-bold text-white">{match.profile.rating}</span>
-                                    </div>
-                                </div>
-                                {match.unread && (
-                                    <span className="absolute top-0 right-0 w-3 h-3 bg-cyan-500 rounded-full border-2 border-black z-10"></span>
-                                )}
-                            </div>
-                            <span className={`text-xs font-semibold group-hover:text-cyan-400 transition-colors ${match.unread ? 'text-white' : 'text-gray-400'}`}>{match.profile.name}</span>
-                        </div>
-                    ))}
+            <div className="relative z-10">
+                <div className="flex justify-between items-end mb-8">
+                    <h1 className="text-3xl font-black italic tracking-tighter text-white">CONNECTIONS</h1>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-neon-cyan/10 border border-neon-cyan/20 rounded-full">
+                        <div className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"></div>
+                        <span className="text-neon-cyan font-bold text-xs">{matches.filter(m => m.unread).length} New</span>
+                    </div>
                 </div>
-            </div>
 
-            {/* Vertical Scroll - Conversations */}
-            <div className="flex-1 flex flex-col">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Conversations</p>
-                <div className="flex-1 overflow-y-auto space-y-2">
-                    {matches.map(match => (
-                        <div
-                            key={match.id}
-                            className={`flex items-center gap-4 p-4 hover:bg-white/5 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-white/5 group ${match.unread ? 'bg-white/5' : ''}`}
-                            onClick={() => handleOpenChat(match)}
-                        >
-                            <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-800 shadow-lg relative">
-                                <img src={match.profile.imageUrl} alt={match.profile.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                {/* Horizontal Scroll - New Matches */}
+                <div className="mb-8">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 pl-1">Recent Vibes</p>
+                    <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x">
+                        {matches.length === 0 && (
+                            <div className="w-full py-8 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-gray-500">
+                                <Sparkles className="mb-2 opacity-50" />
+                                <span className="text-xs font-medium">No matches yet</span>
                             </div>
-                            <div className="flex-1">
-                                <div className="flex justify-between items-center mb-1">
-                                    <h3 className={`font-bold text-base group-hover:text-cyan-400 transition-colors ${match.unread ? 'text-white' : 'text-gray-300'}`}>{match.profile.name}</h3>
-                                    <span className="text-[10px] text-gray-500 font-medium">2m ago</span>
+                        )}
+                        {matches.map(match => (
+                            <div key={match.id} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[72px] snap-start" onClick={() => handleOpenChat(match)}>
+                                <div className="relative">
+                                    <div className="w-[72px] h-[72px] rounded-full p-[2px] bg-gradient-to-tr from-neon-cyan via-neon-blue to-neon-purple group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative bg-gray-900">
+                                            <img src={match.profile.imageUrl} alt={match.profile.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    </div>
+                                    {match.unread && (
+                                        <div className="absolute top-0 right-0 w-4 h-4 bg-neon-cyan rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(0,240,255,1)]"></div>
+                                    )}
                                 </div>
-                                <p className={`text-sm truncate transition-colors ${match.unread ? 'text-gray-200 font-semibold' : 'text-gray-400 group-hover:text-gray-300'}`}>
-                                    {match.lastMessage || <span className="text-blue-500 italic">Start chatting...</span>}
-                                </p>
+                                <span className={`text-xs font-bold tracking-wide transition-colors ${match.unread ? 'text-white' : 'text-gray-500 group-hover:text-neon-cyan'}`}>
+                                    {match.profile.name}
+                                </span>
                             </div>
-                            {match.unread && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            )}
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+                </div>
+
+                {/* Vertical Scroll - Messages */}
+                <div className="flex-1 flex flex-col min-h-0">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 pl-1">Messages</p>
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1 hide-scrollbar pb-4">
+                        {matches.map((match, i) => (
+                            <GlassCard
+                                key={match.id}
+                                variant={match.unread ? "neon" : "dark"}
+                                className={`cursor-pointer transition-all border border-white/5 hover:border-white/10 group active:scale-95`}
+                                onClick={() => handleOpenChat(match)}
+                                delay={i}
+                            >
+                                <div className="p-4 flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-2xl overflow-hidden relative shadow-lg">
+                                        <img src={match.profile.imageUrl} alt={match.profile.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <h3 className={`font-bold text-base truncate pr-2 ${match.unread ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>
+                                                {match.profile.name}
+                                            </h3>
+                                            <span className="text-[10px] text-gray-600 font-medium whitespace-nowrap">2m ago</span>
+                                        </div>
+                                        <p className={`text-sm truncate transition-colors ${match.unread ? 'text-neon-cyan font-medium' : 'text-gray-500 group-hover:text-gray-400'}`}>
+                                            {match.lastMessage || <span className="opacity-50 italic">Start the conversation...</span>}
+                                        </p>
+                                    </div>
+                                    {match.unread && (
+                                        <div className="w-2 h-2 bg-neon-cyan rounded-full shadow-[0_0_10px_rgba(0,240,255,1)]"></div>
+                                    )}
+                                </div>
+                            </GlassCard>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

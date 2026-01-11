@@ -1,58 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';">
-    <title>Vibe - Casual Connections</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-      // Minimal polyfill for process.env to prevent runtime crashes if accessed directly
-      // Note: Actual env vars are replaced by Vite during build
-      window.process = window.process || {};
-      window.process.env = window.process.env || {};
-    </script>
-    <style>
-      body { 
-        font-family: 'Plus Jakarta Sans', sans-serif; 
-        background-color: #050505; 
-        color: white; 
-        overflow: hidden; 
-      }
-      
-      /* Smooth gradient animation */
-      @keyframes gradient-xy {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-      
-      .animate-gradient {
-        background-size: 200% 200%;
-        animation: gradient-xy 15s ease infinite;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';">
+  <title>Vibe - Casual Connections</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700&display=swap"
+    rel="stylesheet">
+  <script>
+    // Minimal polyfill for process.env
+    window.process = window.process || {};
+    window.process.env = window.process.env || {};
+  </script>
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #050505;
+      color: white;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Smooth gradient animation */
+    @keyframes gradient-xy {
+      0% {
+        background-position: 0% 50%;
       }
 
-      /* Hide scrollbar */
-      ::-webkit-scrollbar { display: none; }
-      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      50% {
+        background-position: 100% 50%;
+      }
 
-      /* Glassmorphism utilities */
-      .glass {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+      100% {
+        background-position: 0% 50%;
       }
-      
-      .glass-heavy {
-        background: rgba(10, 10, 10, 0.6);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-      }
-    </style>
+    }
+
+    .animate-gradient {
+      background-size: 200% 200%;
+      animation: gradient-xy 15s ease infinite;
+    }
+
+    /* Hide scrollbar */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Glassmorphism utilities */
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-heavy {
+      background: rgba(10, 10, 10, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -68,8 +88,10 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

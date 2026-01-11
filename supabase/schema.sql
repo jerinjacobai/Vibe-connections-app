@@ -70,3 +70,46 @@ WITH CHECK (
         AND (user1_id = auth.uid() OR user2_id = auth.uid())
     )
 );
+
+-- Create Likes table
+CREATE TABLE public.likes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    liked_user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id, liked_user_id)
+);
+
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert their own likes"
+ON public.likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can see likes they created"
+ON public.likes FOR SELECT USING (auth.uid() = user_id);
+
+-- MATCHING LOGIC FUNCTION
+-- This function runs when a new like is inserted. 
+-- It checks if the liked_user has already liked the liker.
+CREATE OR REPLACE FUNCTION check_match() RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if the other user already liked this user
+    IF EXISTS (
+        SELECT 1 FROM public.likes 
+        WHERE user_id = NEW.liked_user_id 
+        AND liked_user_id = NEW.user_id
+    ) THEN
+        -- It's a match! Insert into matches table
+        INSERT INTO public.matches (user1_id, user2_id)
+        VALUES (LEAST(NEW.user_id, NEW.liked_user_id), GREATEST(NEW.user_id, NEW.liked_user_id))
+        ON CONFLICT DO NOTHING;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger for matching
+CREATE TRIGGER on_like_created
+    AFTER INSERT ON public.likes
+    FOR EACH ROW
+    EXECUTE FUNCTION check_match();
