@@ -76,7 +76,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         onLogin();
       }
     } catch (e: any) {
-      setError(e.message);
+      let msg = e.message;
+      // Map common Supabase errors to helpful messages
+      if (msg.includes('Email logins are disabled')) {
+        msg = "Email Login is disabled in Supabase. Go to Auth > Providers > Enable Email.";
+      } else if (msg.includes('Invalid login credentials')) {
+        msg = "Wrong email or password. Please try again.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -208,24 +215,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </div>
           )}
 
-          {error && (
-            <div className="absolute -bottom-16 left-0 right-0 animate-slide-up">
-              <GlassCard className="p-4 flex items-center justify-center gap-3 border-red-500/30 bg-red-500/10">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                <p className="text-xs uppercase font-bold tracking-wider text-red-400">{error}</p>
-              </GlassCard>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="absolute -bottom-16 left-0 right-0 animate-slide-up">
-              <GlassCard className="p-4 flex items-center justify-center gap-3 border-green-500/30 bg-green-500/10">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <p className="text-xs uppercase font-bold tracking-wider text-green-400">{successMsg}</p>
-              </GlassCard>
-            </div>
-          )}
         </GlassCard>
+
+        {error && (
+          <div className="absolute -bottom-24 left-0 right-0 animate-slide-up bg-black/50 rounded-2xl backdrop-blur">
+            <GlassCard className="p-4 flex items-center justify-center gap-3 border-red-500/30 bg-red-500/10">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+              <p className="text-xs uppercase font-bold tracking-wider text-red-400">{error}</p>
+            </GlassCard>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="absolute -bottom-24 left-0 right-0 animate-slide-up bg-black/50 rounded-2xl backdrop-blur">
+            <GlassCard className="p-4 flex items-center justify-center gap-3 border-green-500/30 bg-green-500/10">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <p className="text-xs uppercase font-bold tracking-wider text-green-400">{successMsg}</p>
+            </GlassCard>
+          </div>
+        )}
       </div>
     </div>
   );

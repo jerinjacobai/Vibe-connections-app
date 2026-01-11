@@ -12,6 +12,20 @@ interface ProfileScreenProps {
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences, profile, onUpdateProfile, onLogout }) => {
+    const [isEditing, setIsEditing] = React.useState(false);
+    const [editName, setEditName] = React.useState(profile.name);
+    const [editBio, setEditBio] = React.useState(profile.bio);
+    const [editAge, setEditAge] = React.useState(profile.age?.toString() || '');
+
+    const handleSaveProfile = () => {
+        onUpdateProfile({
+            name: editName,
+            bio: editBio,
+            age: parseInt(editAge) || profile.age
+        });
+        setIsEditing(false);
+    };
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,6 +63,64 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences,
             <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/20 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-cyan/20 rounded-full blur-[120px] pointer-events-none"></div>
 
+            {/* Edit Profile Modal */}
+            {isEditing && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <GlassCard className="w-full max-w-sm p-6" variant="neon">
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Edit2 size={20} className="text-neon-cyan" /> Edit Profile
+                        </h3>
+
+                        <div className="space-y-4 mb-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Name</label>
+                                <input
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-neon-cyan/50 focus:bg-white/10 outline-none transition-all"
+                                    placeholder="Your Name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Age</label>
+                                <input
+                                    value={editAge}
+                                    onChange={(e) => setEditAge(e.target.value)}
+                                    type="number"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-neon-cyan/50 focus:bg-white/10 outline-none transition-all"
+                                    placeholder="24"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Bio</label>
+                                <textarea
+                                    value={editBio}
+                                    onChange={(e) => setEditBio(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-neon-cyan/50 focus:bg-white/10 outline-none transition-all h-24 resize-none"
+                                    placeholder="Tell us about your vibe..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setIsEditing(false)}
+                                className="flex-1 py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <NeonButton
+                                onClick={handleSaveProfile}
+                                className="flex-1"
+                                variant="primary"
+                            >
+                                Save Changes
+                            </NeonButton>
+                        </div>
+                    </GlassCard>
+                </div>
+            )}
+
             {/* Hidden File Inputs */}
             <input
                 type="file"
@@ -76,7 +148,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences,
                     </div>
                 </div>
                 <button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                        setEditName(profile.name);
+                        setEditBio(profile.bio);
+                        setEditAge(profile.age.toString());
+                        setIsEditing(true);
+                    }}
                     className="absolute bottom-1 right-1 bg-black p-3 rounded-full border border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan hover:text-black transition-all shadow-[0_0_15px_rgba(0,240,255,0.3)] z-20"
                 >
                     <Edit2 size={16} />
@@ -92,6 +169,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onEditPreferences,
                     <Activity size={12} className="text-neon-pink" />
                     Chill Vibe
                 </div>
+                <button
+                    onClick={() => {
+                        setEditName(profile.name);
+                        setEditBio(profile.bio);
+                        setEditAge(profile.age.toString());
+                        setIsEditing(true);
+                    }}
+                    className="px-3 py-1 rounded-full bg-neon-purple/20 border border-neon-purple/50 text-neon-purple text-xs font-bold uppercase tracking-wider hover:bg-neon-purple/30 transition-colors"
+                >
+                    Edit Info
+                </button>
             </div>
 
             <p className="text-gray-400 text-sm text-center max-w-xs leading-relaxed mb-8 italic">
